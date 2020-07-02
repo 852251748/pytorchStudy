@@ -1,0 +1,7 @@
+1.开始训练损失训练到1.8左右不收敛了
+原因：查看Mydataset 计算索引和偏移量时 使用了两个除法 导致计算出的索引和偏移量数据部分为0 
+代码：   		# cx_offet, cx_index = math.modf(cx / cfg.IMG_WIDTH / feature_size)
+                # cy_offet, cy_index = math.modf(cy / cfg.IMG_HEIGHT / feature_size)
+解决：减少使用除法 
+		cx_offet, cx_index = math.modf(cx * feature_size / cfg.IMG_WIDTH)
+        cy_offet, cy_index = math.modf(cy * feature_size / cfg.IMG_HEIGHT)
