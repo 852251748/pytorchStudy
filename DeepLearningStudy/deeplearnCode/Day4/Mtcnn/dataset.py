@@ -40,3 +40,4 @@ class Mydataset(Dataset):
 if __name__ == '__main__':
     dataset = Mydataset(r"E:\mtcnn_data\48")
     print(dataset[0])
+    print(dataset[0][0].shape)
