@@ -75,8 +75,7 @@ class Train:
                     torch.save(self.net.state_dict(), f"./param/{epoch}_rnet.pt")
                 else:
                     torch.save(self.net.state_dict(), f"./param/{epoch}_onet.pt")
-            # print(conf_loss, off_loss, landmask_loss)
-            # exit()
+
 
 
 if __name__ == '__main__':
