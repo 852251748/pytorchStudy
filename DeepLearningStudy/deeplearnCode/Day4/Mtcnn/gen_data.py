@@ -9,7 +9,8 @@ class Gendata:
     def __init__(self, root, data_path, img_size):
         self.img_size = img_size
         self.img_path = f"{root}/Img/img_celeba"
-        self.lable_path = f"{root}/Anno/list_bbox_celeba.txt"
+        self.boxlable_path = f"{root}/Anno/list_bbox_celeba.txt"
+        self.landmasklable_path = f"{root}/Anno/list_landmarks_celeba.txt"
         self.positive = f"{data_path}/{img_size}/positive"
         self.negative = f"{data_path}/{img_size}/negative"
         self.part = f"{data_path}/{img_size}/part"
@@ -17,12 +18,27 @@ class Gendata:
         self.negative_lable = f"{data_path}/{img_size}/negative.txt"
         self.part_lable = f"{data_path}/{img_size}/part.txt"
 
-    def __call__(self, ):
+        if not os.path.exists(self.positive):
+            os.mkdir(self.positive)
+        if not os.path.exists(self.negative):
+            os.mkdir(self.negative)
+        if not os.path.exists(self.part):
+            os.mkdir(self.part)
 
-        with open(self.lable_path) as f:
+    def __call__(self, ):
+        # 读取五官的坐标点
+        with open(self.landmasklable_path) as lmf:
+            landmarsk = lmf.readlines()[2:]
+            landmarsk_data = {}
+            for str in landmarsk:
+                list = str.split()
+                landmarsk_data[list[0]] = list[1:]
+
+        with open(self.boxlable_path) as f:
             data = f.readlines()
-            for str in data[2:]:
+            for i, str in enumerate(data[2:]):
                 data = str.split()
+
                 x, y, w, h = data[1:5]
                 x, y, w, h = int(x), int(y), int(w), int(h)
                 x1, y1, x2, y2 = int(x + 0.12 * w), int(y + 0.1 * h), int(x + 0.9 * w), int(y + 0.85 * h)
@@ -55,6 +71,25 @@ class Gendata:
                 for sx1, sy1, sx2, sy2, sideLen in sampleList:
                     off_x1, off_y1, off_x2, off_y2 = (x1 - sx1) / sideLen, (y1 - sy1) / sideLen, (x2 - sx2) / sideLen, (
                             y2 - sy2) / sideLen
+
+                    # 计算五官偏移量
+                    landmarsk_list = landmarsk_data[data[0]]
+                    lefteye_x, lefteye_y, righteye_x, righteye_y, nose_x, nose_y, leftmouth_x, leftmouth_y, rightmouth_x, rightmouth_y = int(
+                        landmarsk_list[0]), int(landmarsk_list[1]), int(landmarsk_list[2]), int(landmarsk_list[3]), int(
+                        landmarsk_list[4]), int(landmarsk_list[5]), int(landmarsk_list[6]), int(landmarsk_list[7]), int(
+                        landmarsk_list[8]), int(landmarsk_list[9])
+
+                    off_lefteye_x = (lefteye_x - sx1) / sideLen
+                    off_lefteye_y = (lefteye_y - sy1) / sideLen
+                    off_righteye_x = (righteye_x - sx1) / sideLen
+                    off_righteye_y = (righteye_y - sy1) / sideLen
+                    off_nose_x = (nose_x - sx1) / sideLen
+                    off_nose_y = (nose_y - sy1) / sideLen
+                    off_leftmouth_x = (leftmouth_x - sx1) / sideLen
+                    off_leftmouth_y = (leftmouth_y - sy1) / sideLen
+                    off_rightmouth_x = (rightmouth_x - sx1) / sideLen
+                    off_rightmouth_y = (rightmouth_y - sy1) / sideLen
+
                     # 裁剪图片
                     img = Image.open(f"{self.img_path}/{data[0]}")
                     crop_img = img.crop([sx1, sy1, sx2, sy2])
@@ -63,23 +98,25 @@ class Gendata:
                     # 计算IOU
                     iou = Iou(torch.tensor([x1, y1, x2, y2]).float(), torch.tensor([[sx1, sy1, sx2, sy2]]).float())
 
-                    if iou > 0.65:
+                    if iou > 0.6:
                         sampleimg_path = f"{self.positive}/{len(os.listdir(self.positive))}.jpg"
                         resize_img.save(sampleimg_path)
                         with open(self.positive_lable, "a") as f1:
-                            f1.write(f"{sampleimg_path} 1 {off_x1} {off_y1} {off_x2} {off_y2}\n")
+                            f1.write(
+                                f"{sampleimg_path} 1 {off_x1} {off_y1} {off_x2} {off_y2} {off_lefteye_x} {off_lefteye_y} {off_righteye_x} {off_righteye_y} {off_nose_x} {off_nose_y} {off_leftmouth_x} {off_leftmouth_y} {off_rightmouth_x} {off_rightmouth_y}\n")
                     elif iou > 0.4:
                         sampleimg_path = f"{self.part}/{len(os.listdir(self.part))}.jpg"
                         resize_img.save(sampleimg_path)
                         with open(self.part_lable, "a") as f1:
-                            f1.write(f"{sampleimg_path} 0 {off_x1} {off_y1} {off_x2} {off_y2}\n")
+                            f1.write(
+                                f"{sampleimg_path} 2 {off_x1} {off_y1} {off_x2} {off_y2} {off_lefteye_x} {off_lefteye_y} {off_righteye_x} {off_righteye_y} {off_nose_x} {off_nose_y} {off_leftmouth_x} {off_leftmouth_y} {off_rightmouth_x} {off_rightmouth_y}\n")
                     elif iou < 0.3:
                         sampleimg_path = f"{self.negative}/{len(os.listdir(self.negative))}.jpg"
                         resize_img.save(sampleimg_path)
                         with open(self.negative_lable, "a") as f1:
-                            f1.write(f"{sampleimg_path} 0 {off_x1} {off_y1} {off_x2} {off_y2}\n")
+                            f1.write(f"{sampleimg_path} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n")
 
 
 if __name__ == '__main__':
-    gendta = Gendata("D:\Alldata\CelebA", "E:\mtcnn_data", 48)
+    gendta = Gendata("D:\Alldata\CelebA", "E:\mtcnn_data", 12)
     gendta()
