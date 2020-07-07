@@ -3,20 +3,23 @@ from torch.utils.data import DataLoader
 from deeplearnCode.Day4.Mtcnn.net import *
 from deeplearnCode.Day4.Mtcnn.dataset import Mydataset
 from torch import optim
-from torch.nn import functional as F
+
 
 
 class Train:
     def __init__(self, root, img_size):
         dataset = Mydataset(root, img_size)
-        self.dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+        self.dataloader = DataLoader(dataset, batch_size=512, shuffle=True)
 
         if img_size == 12:
             self.net = PNet()
+            self.net.load_state_dict(torch.load("../param/10_pnet.pt"))
         elif img_size == 24:
             self.net = RNet()
+            # self.net.load_state_dict(torch.load("../param/0_pnet.pt"))
         elif img_size == 48:
             self.net = ONet()
+            # self.net.load_state_dict(torch.load("../param/0_pnet.pt"))
         else:
             print("img_size error!", img_size)
             exit()
@@ -30,8 +33,9 @@ class Train:
         self.conf_loss_fn = torch.nn.BCEWithLogitsLoss()
 
     def __call__(self, num):
-        trainLoss = 0
+
         for epoch in range(num):
+            trainLoss = 0
             for img, lable in self.dataloader:
                 img, lable = img.to(self.device), lable.to(self.device)
 
@@ -50,7 +54,7 @@ class Train:
                 pre_off = pre[off_mask]
                 real_off = lable[off_mask]
 
-                off_loss = self.off_loss_fn(pre_off[:, 1:5], real_off[:, 1:5])
+                off_loss = self.off_loss_fn(torch.tanh_(pre_off[:, 1:5]), real_off[:, 1:5])
 
                 landmask_loss = self.off_loss_fn(pre_off[:, 5:], real_off[:, 5:])
 
@@ -61,23 +65,22 @@ class Train:
                 self.opt.step()
 
                 trainLoss += loss.cpu().detach().item()
-                print(conf_loss.cpu().detach().item(), off_loss.cpu().detach().item(),
-                      landmask_loss.cpu().detach().item())
+                # print("置信度损失：", conf_loss.cpu().detach().item(), "偏移量损失：", off_loss.cpu().detach().item(),
+                #       "五官损失：", landmask_loss.cpu().detach().item())
 
             avgTrainLoss = trainLoss / len(self.dataloader)
 
             print("批次：", epoch, ",训练集损失：", avgTrainLoss)
 
-            if epoch / 10 == 0:
+            if epoch % 5 == 0:
                 if self.img_size == 12:
-                    torch.save(self.net.state_dict(), f"./param/{epoch}_pnet.pt")
+                    torch.save(self.net.state_dict(), f"../param/{epoch}_pnet.pt")
                 elif self.img_size == 24:
-                    torch.save(self.net.state_dict(), f"./param/{epoch}_rnet.pt")
+                    torch.save(self.net.state_dict(), f"../param/{epoch}_rnet.pt")
                 else:
-                    torch.save(self.net.state_dict(), f"./param/{epoch}_onet.pt")
-
+                    torch.save(self.net.state_dict(), f"../param/{epoch}_onet.pt")
 
 
 if __name__ == '__main__':
-    trainer = Train(r"E:\mtcnn_data", 48)
-    trainer(10)
+    trainer12 = Train(r"E:\mtcnn_data", 12)
+    trainer12(10000)

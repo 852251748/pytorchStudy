@@ -36,7 +36,7 @@ class Gendata:
 
         with open(self.boxlable_path) as f:
             data = f.readlines()
-            for i, str in enumerate(data[2:]):
+            for i, str in enumerate(data[100000:]):
                 data = str.split()
 
                 x, y, w, h = data[1:5]
@@ -48,6 +48,8 @@ class Gendata:
                 sampleList = []
                 for i in range(2):
                     # 生正成样本点
+                    if int(-w * 0.2) >= int(w * 0.2) or int(-h * 0.2) >= int(h * 0.2):
+                        continue
                     sampleCx, sampleCy = cx + np.random.randint(int(-w * 0.2), int(w * 0.2)), cy + np.random.randint(
                         int(-h * 0.2), int(h * 0.2))
 
@@ -57,14 +59,14 @@ class Gendata:
 
                     sampleList.append([p_sx1, p_sy1, p_sx2, p_sy2, p_sideLen])
 
-                    # 生成负样本
-                    if self.img_size >= int(min(w, h) / 2):
-                        continue
-                    n_sideLen = np.random.randint(int(self.img_size), int(min(w, h) / 2))
-                    n_sx1, n_sy1 = np.random.randint(0, w - n_sideLen), np.random.randint(0, h - n_sideLen)
-                    n_sx2, n_sy2 = n_sx1 + n_sideLen, n_sy1 + n_sideLen
-
-                    sampleList.append([n_sx1, n_sy1, n_sx2, n_sy2, n_sideLen])
+                    # # 生成负样本
+                    # if self.img_size >= int(min(w, h) / 2):
+                    #     continue
+                    # n_sideLen = np.random.randint(int(self.img_size), int(min(w, h) / 2))
+                    # n_sx1, n_sy1 = np.random.randint(0, w - n_sideLen), np.random.randint(0, h - n_sideLen)
+                    # n_sx2, n_sy2 = n_sx1 + n_sideLen, n_sy1 + n_sideLen
+                    #
+                    # sampleList.append([n_sx1, n_sy1, n_sx2, n_sy2, n_sideLen])
 
                 # 计算偏移量
                 # 网络要预测是物体的真实框的坐标，偏移量计算的是物体真实框的坐标和裁剪的样本的坐标的偏移值，所以偏移量中除数w/h就是裁剪的图片的宽高
