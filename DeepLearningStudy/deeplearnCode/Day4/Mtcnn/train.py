@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
-from deeplearnCode.Day4.Mtcnn.net import *
-from deeplearnCode.Day4.Mtcnn.dataset import Mydataset
+from net import *
+from dataset import Mydataset
 from torch import optim
 
 
@@ -9,7 +9,7 @@ from torch import optim
 class Train:
     def __init__(self, root, img_size):
         dataset = Mydataset(root, img_size)
-        self.dataloader = DataLoader(dataset, batch_size=512, shuffle=True)
+        self.dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 
         if img_size == 12:
             self.net = PNet()
@@ -40,7 +40,7 @@ class Train:
                 img, lable = img.to(self.device), lable.to(self.device)
 
                 pre = self.net(img)
-                # print(pre, lable)
+
                 if self.img_size == 12:
                     pre = pre.reshape(-1, 15)
                 real_conf = lable[:, 0]
@@ -65,8 +65,8 @@ class Train:
                 self.opt.step()
 
                 trainLoss += loss.cpu().detach().item()
-                # print("置信度损失：", conf_loss.cpu().detach().item(), "偏移量损失：", off_loss.cpu().detach().item(),
-                #       "五官损失：", landmask_loss.cpu().detach().item())
+                print("置信度损失：", conf_loss.cpu().detach().item(), "偏移量损失：", off_loss.cpu().detach().item(),
+                      "五官损失：", landmask_loss.cpu().detach().item())
 
             avgTrainLoss = trainLoss / len(self.dataloader)
 

@@ -1,14 +1,14 @@
 import torch
-from deeplearnCode.Day4.Mtcnn.net import PNet, RNet, ONet
+from net import PNet, RNet, ONet
 from PIL import Image, ImageDraw
-from deeplearnCode.Day4.Mtcnn.dataset import tf
-from deeplearnCode.Day4.Mtcnn.utils import nms
+from dataset import tf
+from utils import nms
 
 
 class Detection:
     def __init__(self):
         self.pnet = PNet()
-        self.pnet.load_state_dict(torch.load("../param/10_pnet.pt"))
+        self.pnet.load_state_dict(torch.load("../param/50_pnet.pt"))
         self.rnet = RNet()
         # self.rnet.load_state_dict(torch.load("../param/65_pnet.pt"))
         self.onet = ONet()
