@@ -35,8 +35,8 @@ class Gendata:
                 landmarsk_data[list[0]] = list[1:]
 
         with open(self.boxlable_path) as f:
-            data = f.readlines()
-            for i, str in enumerate(data[100000:]):
+            lable_data = f.readlines()
+            for i, str in enumerate(lable_data[2:]):
                 data = str.split()
 
                 x, y, w, h = data[1:5]
