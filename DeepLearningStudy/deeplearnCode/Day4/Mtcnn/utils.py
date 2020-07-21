@@ -39,6 +39,16 @@ def nms(boxes, threshold, is_min=False):
     return torch.stack(rboxes, dim=0)
 
 
+def make_square(box):
+    x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
+    w, h = x2 - x1, y2 - y1
+    sidelen = max(w, h)
+    cx, cy = (x1 + w / 2), (y1 + h / 2)
+    x1, y1 = (cx - sidelen / 2), (cy - sidelen / 2)
+    x2, y2 = x1 + sidelen, y1 + sidelen
+    return torch.tensor([x1, y1, x2, y2])
+
+
 if __name__ == '__main__':
     box = torch.tensor([4., 5., 8., 9., 0.7])
     boxes = torch.tensor([[1., 2., 8., 9., 0.5], [4., 5., 8., 9., 0.7], [3., 6., 10., 12., 0.6]])

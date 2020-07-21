@@ -1,19 +1,20 @@
 import torch
+import time
 from torch.utils.data import DataLoader
 from net import *
 from dataset import Mydataset
 from torch import optim
-
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Train:
     def __init__(self, root, img_size):
         dataset = Mydataset(root, img_size)
         self.dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
-
+        torch.cuda.empty_cache()
         if img_size == 12:
             self.net = PNet()
-            self.net.load_state_dict(torch.load("../param/10_pnet.pt"))
+            self.net.load_state_dict(torch.load("../param/test_param/net.pt"))
         elif img_size == 24:
             self.net = RNet()
             # self.net.load_state_dict(torch.load("../param/0_pnet.pt"))
@@ -31,18 +32,20 @@ class Train:
 
         self.off_loss_fn = torch.nn.MSELoss()
         self.conf_loss_fn = torch.nn.BCEWithLogitsLoss()
+        self.summary = SummaryWriter("./logs")
 
     def __call__(self, num):
 
         for epoch in range(num):
             trainLoss = 0
-            for img, lable in self.dataloader:
+            for i, (img, lable) in enumerate(self.dataloader):
                 img, lable = img.to(self.device), lable.to(self.device)
 
                 pre = self.net(img)
 
                 if self.img_size == 12:
                     pre = pre.reshape(-1, 15)
+
                 real_conf = lable[:, 0]
                 pre_conf = pre[:, 0]
 
@@ -65,13 +68,19 @@ class Train:
                 self.opt.step()
 
                 trainLoss += loss.cpu().detach().item()
-                print("置信度损失：", conf_loss.cpu().detach().item(), "偏移量损失：", off_loss.cpu().detach().item(),
-                      "五官损失：", landmask_loss.cpu().detach().item())
+
+                # print("i", i, "置信度损失：", conf_loss.cpu().detach().item(), "偏移量损失：", off_loss.cpu().detach().item(),
+                #       "五官损失：", landmask_loss.cpu().detach().item())
+                if (i + 1) % 50 == 0:
+                    print(i)
+                    torch.save(self.net.state_dict(), f"../param/test_param/net.pt")
 
             avgTrainLoss = trainLoss / len(self.dataloader)
 
-            print("批次：", epoch, ",训练集损失：", avgTrainLoss)
+            print("批次：", epoch, ",训练集损失：", avgTrainLoss, "time:",
+                  time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
+            self.summary.add_scalar("loss", avgTrainLoss, epoch)
             if epoch % 5 == 0:
                 if self.img_size == 12:
                     torch.save(self.net.state_dict(), f"../param/{epoch}_pnet.pt")
@@ -82,5 +91,5 @@ class Train:
 
 
 if __name__ == '__main__':
-    trainer12 = Train(r"E:\mtcnn_data", 12)
+    trainer12 = Train(r"G:\teach_data", 12)
     trainer12(10000)
