@@ -27,3 +27,8 @@
 github代码代下载：
 http://gg.widyun.com/
 
+
+
+
+从编程实现角度学习Faster R-CNN（附极简实现）：
+https://zhuanlan.zhihu.com/p/32404424
