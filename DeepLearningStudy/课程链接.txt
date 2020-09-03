@@ -32,6 +32,7 @@ http://gg.widyun.com/
 
 从编程实现角度学习Faster R-CNN（附极简实现）：
 https://zhuanlan.zhihu.com/p/32404424
+https://zhuanlan.zhihu.com/p/31426458
 
 inceptionV1_v4:
 https://www.cnblogs.com/dengshunge/p/10808191.html

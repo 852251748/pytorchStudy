@@ -44,7 +44,7 @@ def nms(boxes, thresh):
 
 if __name__ == '__main__':
     # box = torch.tensor([0, 1, 1, 3, 6])
-    # boxes = torch.tensor([[0, 1, 1, 3, 6], [0, 2, 2, 5, 7], [0, 2, 1, 5, 5]])
+    boxes = torch.tensor([[0, 1, 1, 3, 6], [0, 2, 2, 5, 7], [0, 2, 1, 5, 5]])
     box = torch.tensor([0, 2, 2, 5, 7])
     boxes = torch.tensor([[0, 2, 1, 5, 5]])
     print(iou(box, boxes))
